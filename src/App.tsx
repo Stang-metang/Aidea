@@ -47,7 +47,6 @@ const App = () => {
 
     setPending(true)
     const chatGPTResponse = await getChatGPTresponse({
-      model: "gpt-5-mini",
       message: userInput,
       history: chatGPTChatHistory
     })
