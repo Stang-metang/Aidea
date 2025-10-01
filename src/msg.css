@@ -120,7 +120,7 @@ label #btn {
   color: var(--text-color);
   padding: 6px 12px;
   transition: all .5ws ease;
-  position: absolute;
+  position: fixed;
   cursor: pointer;
   background: var(--button-color);
   border-radius: 1px;
@@ -134,7 +134,7 @@ label #cancel {
   color: var(--cancel-color);
   padding: 4px 9px;
   transition: all .5s ease;
-  position: absolute;
+  position: fixed;
   cursor: pointer;
   background: var(--sidebar-primary);
   border-radius: 1px;
