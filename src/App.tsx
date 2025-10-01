@@ -15,6 +15,7 @@ const App = () => {
   const [ pending, setPending ] = useState(false);
   const [ geminiChatHistory, setGeminiChatHistory ] = useState<geminiChatHistory>([])
   const [ chatGPTChatHistory, setChatGPTChatHistory ] = useState<chatGPTChatHistory>([])
+  const [ chatGPTUsageCounter, setChatGPTUsageCounter ] = useState(0)
 
   const sendMessageToGemini = async () => {
     setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("user",userInput)])
@@ -30,8 +31,19 @@ const App = () => {
   }
 
   const sendMessageToChatGPT = async () => {
+    if(chatGPTUsageCounter > 10) {
+      return
+    }
+
     setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory, createChatGPTChatHistoryElement("user",userInput)])
     setUserInput("")
+
+    if(chatGPTUsageCounter == 10) {
+      setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant","You have reached the limit.")])
+      setChatGPTUsageCounter(chatGPTUsageCounter => chatGPTUsageCounter + 1)
+      setPending(false)
+      return
+    }
 
     setPending(true)
     const chatGPTResponse = await getChatGPTresponse({
@@ -40,6 +52,7 @@ const App = () => {
       history: chatGPTChatHistory
     })
     setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant",chatGPTResponse)])
+    setChatGPTUsageCounter(chatGPTUsageCounter => chatGPTUsageCounter + 1)
     setPending(false)
   }
 

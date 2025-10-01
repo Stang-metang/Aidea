@@ -48,7 +48,7 @@ const SplitChat = ({geminiChatHistory,chatGPTChatHistory}: typeGeminiChatHistory
                     </div>
                 </div>
                 <div className="chat-wrapper right-chat">
-                    <header className="chat-header">Right AI</header>
+                    <header className="chat-header">ChatGPT</header>
                     <div className="chat-container">
                         {chatGPTChats}
                     </div>
