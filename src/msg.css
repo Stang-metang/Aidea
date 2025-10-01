@@ -188,7 +188,6 @@ label #cancel {
 
 #split-chat.active {
   display: flex;
-  flex-direction: column;
 }
 
 /* Hide the single-chat container when the split-screen is active */
@@ -200,7 +199,7 @@ label #cancel {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 100%;
+  width: 50%;
   background: var(--secondary-color);
   border-radius: 10px;
   overflow: auto;
@@ -412,4 +411,14 @@ label #cancel {
   height: 100%;
   width: 100%;
   padding: 0;
+}
+
+@media (max-width: 767px) {
+  #split-chat.active {
+    flex-direction: column;
+  }
+
+  .chat-wrapper {
+    width: 100%;
+  }
 }
