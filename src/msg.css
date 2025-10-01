@@ -187,6 +187,7 @@ label #cancel {
 
 #split-chat.active {
   display: flex;
+  flex-direction: column;
 }
 
 /* Hide the single-chat container when the split-screen is active */
