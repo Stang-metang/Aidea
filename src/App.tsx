@@ -21,12 +21,24 @@ const App = () => {
     setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("user",userInput)])
     setUserInput("")
 
+    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("model","Just a sec...")])
     setPending(true)
     const geminiResponse = await geminiGenerateContent({
       message: userInput,
       history: geminiChatHistory
     })
-    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("model",geminiResponse)])
+    setGeminiChatHistory(geminiChatHistory => {
+      const chat:geminiChatHistory = []
+      geminiChatHistory.map(geminiHistoryElement => {
+        if(geminiHistoryElement.parts[0].text == "Just a sec...") {
+          chat.push(createGeminiHistoryElement("model",geminiResponse))
+          return
+        }
+
+        chat.push(geminiHistoryElement)
+      })
+      return chat
+    })
     setPending(false)
   }
 
@@ -45,12 +57,24 @@ const App = () => {
       return
     }
 
+    setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant","Just a sec...")])
     setPending(true)
     const chatGPTResponse = await getChatGPTresponse({
       message: userInput,
       history: chatGPTChatHistory
     })
-    setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant",chatGPTResponse)])
+    setChatGPTChatHistory(chatGPTChatHistory => {
+      const chat:chatGPTChatHistory = []
+      chatGPTChatHistory.map(chatGPTChatHistoryElement => {
+        if(chatGPTChatHistoryElement.content == "Just a sec...") {
+          chat.push(createChatGPTChatHistoryElement("assistant",chatGPTResponse))
+          return
+        }
+
+        chat.push(chatGPTChatHistoryElement)
+      })
+      return chat
+    })
     setChatGPTUsageCounter(chatGPTUsageCounter => chatGPTUsageCounter + 1)
     setPending(false)
   }
