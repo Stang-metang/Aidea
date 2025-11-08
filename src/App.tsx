@@ -1,6 +1,6 @@
 import geminiGenerateContent from "./config/gemini"
 import getChatGPTresponse from "./config/chatGPT"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import SideBar from "./components/SideBar"
 import SingleChat from "./components/SingleChat"
 import SplitChat from "./components/SplitChat"
@@ -12,10 +12,13 @@ const App = () => {
 
   const [isSplit, setIsSplit] = useState(false)
 
-  const [ pending, setPending ] = useState(false);
+  const sendMessageExecuteCount = useRef(0)
+  const sendMessageToGeminiCount = useRef(0)
+  const sendMessageToChatGPTCount = useRef(0)
+  const [ pending, setPending ] = useState(false)
   const [ geminiChatHistory, setGeminiChatHistory ] = useState<geminiChatHistory>([])
   const [ chatGPTChatHistory, setChatGPTChatHistory ] = useState<chatGPTChatHistory>([])
-  const [ chatGPTUsageCounter, setChatGPTUsageCounter ] = useState(0)
+  const chatGPTUsageCounter = useRef(0)
 
   const sendMessageToGemini = async () => {
     setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("user",userInput)])
@@ -40,19 +43,21 @@ const App = () => {
       return chat
     })
     setPending(false)
+
+    sendMessageToGeminiCount.current += 1
   }
 
   const sendMessageToChatGPT = async () => {
-    if(chatGPTUsageCounter > 10) {
+    if(chatGPTUsageCounter.current > 10) {
       return
     }
 
     setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory, createChatGPTChatHistoryElement("user",userInput)])
     setUserInput("")
 
-    if(chatGPTUsageCounter == 10) {
+    if(chatGPTUsageCounter.current == 10) {
       setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant","You have reached the limit.")])
-      setChatGPTUsageCounter(chatGPTUsageCounter => chatGPTUsageCounter + 1)
+      chatGPTUsageCounter.current += 1
       setPending(false)
       return
     }
@@ -75,8 +80,9 @@ const App = () => {
       })
       return chat
     })
-    setChatGPTUsageCounter(chatGPTUsageCounter => chatGPTUsageCounter + 1)
+    chatGPTUsageCounter.current += 1
     setPending(false)
+    sendMessageToChatGPTCount.current += 1
   }
 
   const sendMessage = () => {
@@ -90,6 +96,8 @@ const App = () => {
       sendMessageToGemini()
       sendMessageToChatGPT()
     }
+
+    sendMessageExecuteCount.current += 1
   }
 
   return(
