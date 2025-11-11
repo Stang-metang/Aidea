@@ -8,6 +8,30 @@ import PromptContainer from "./components/PromptContainer"
 import { createGeminiHistoryElement, type geminiChatHistory, createChatGPTChatHistoryElement, type chatGPTChatHistory } from "./types/AideaTypes"
 
 const App = () => {
+  const chatPendingText = "Just a sec..."
+
+  const pushGeminiChats = (role: "user" | "model", text: string) => {
+    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement(role,text)])
+  }
+
+  const replaceGeminiJustASecMessage = (geminiChatHistory: geminiChatHistory, geminiResponse: string) => {
+      const chat:geminiChatHistory = []
+      geminiChatHistory.map(geminiHistoryElement => {
+        if(geminiHistoryElement.parts[0].text == "Just a sec...") {
+          chat.push(createGeminiHistoryElement("model",geminiResponse))
+          return
+        }
+
+        chat.push(geminiHistoryElement)
+      })
+      return chat
+  }
+
+  const pushChatGPTChats = (role: "user" | "assistant", content: string) => {
+    setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement(role,content)])
+  }
+
+  //main
   const [userInput, setUserInput] = useState("")
 
   const [isSplit, setIsSplit] = useState(false)
@@ -24,7 +48,7 @@ const App = () => {
     setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("user",userInput)])
     setUserInput("")
 
-    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("model","Just a sec...")])
+    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("model",chatPendingText)])
     setPending(true)
     const geminiResponse = await geminiGenerateContent({
       message: userInput,
@@ -33,7 +57,7 @@ const App = () => {
     setGeminiChatHistory(geminiChatHistory => {
       const chat:geminiChatHistory = []
       geminiChatHistory.map(geminiHistoryElement => {
-        if(geminiHistoryElement.parts[0].text == "Just a sec...") {
+        if(geminiHistoryElement.parts[0].text == chatPendingText) {
           chat.push(createGeminiHistoryElement("model",geminiResponse))
           return
         }
@@ -85,16 +109,32 @@ const App = () => {
     sendMessageToChatGPTCount.current += 1
   }
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if(userInput == "") return
     if(pending == true) return
 
     if(isSplit==false) {
-      sendMessageToGemini()
+      pushGeminiChats("user",userInput)
+      setUserInput("")
+
+      pushGeminiChats("model", chatPendingText)
+      setPending(true)
+      const geminiResponse = await geminiGenerateContent({
+        message: userInput,
+        history: geminiChatHistory,
+      })
+      setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory,geminiResponse))
+      setPending(false)
+
     }
     else if(isSplit==true){
-      sendMessageToGemini()
-      sendMessageToChatGPT()
+      pushGeminiChats("user", userInput)
+      pushChatGPTChats("user", userInput)
+      setUserInput("")
+
+      pushGeminiChats("user", chatPendingText)
+      pushChatGPTChats('user', chatPendingText)
+      setPending(true)
     }
 
     sendMessageExecuteCount.current += 1
