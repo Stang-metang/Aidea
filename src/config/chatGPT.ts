@@ -12,7 +12,7 @@ interface typeGetChatGPTresponse {
     history: chatGPTChatHistory
 }
 
-const getChatGPTresponse = async ({ message, model = "gpt-5", history }: typeGetChatGPTresponse) => {
+const getChatGPTresponse = async ({ message, model = "gpt-5-mini", history }: typeGetChatGPTresponse) => {
     return String((await openaiAi.chat.completions.create({
         model: model,
         messages: [...history, createChatGPTChatHistoryElement("user", message)]

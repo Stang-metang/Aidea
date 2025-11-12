@@ -31,6 +31,19 @@ const App = () => {
     setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement(role,content)])
   }
 
+  const replaceChatGPTJustASecMessage = (chatGPTChatHistory: chatGPTChatHistory, chatGPTResponse: string) => {
+    const chat:chatGPTChatHistory = []
+      chatGPTChatHistory.map(chatGPTChatHistoryElement => {
+        if(chatGPTChatHistoryElement.content == "Just a sec...") {
+          chat.push(createChatGPTChatHistoryElement("assistant",chatGPTResponse))
+          return
+        }
+
+        chat.push(chatGPTChatHistoryElement)
+      })
+      return chat
+  }
+
   //main
   const [userInput, setUserInput] = useState("")
 
@@ -135,6 +148,22 @@ const App = () => {
       pushGeminiChats("user", chatPendingText)
       pushChatGPTChats('user', chatPendingText)
       setPending(true)
+      const [ geminiResponse, chatGPTResponse ] = await Promise.all([
+
+        geminiGenerateContent({
+          message: userInput,
+          history: geminiChatHistory
+        }),
+
+        getChatGPTresponse({
+          message: userInput,
+          history: chatGPTChatHistory
+        })
+
+      ])
+      replaceGeminiJustASecMessage(geminiChatHistory, geminiResponse)
+      replaceChatGPTJustASecMessage(chatGPTChatHistory, chatGPTResponse)
+      setPending(false)
     }
 
     sendMessageExecuteCount.current += 1
