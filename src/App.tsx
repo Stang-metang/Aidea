@@ -50,77 +50,11 @@ const App = () => {
   const [isSplit, setIsSplit] = useState(false)
 
   const sendMessageExecuteCount = useRef(0)
-  const sendMessageToGeminiCount = useRef(0)
-  const sendMessageToChatGPTCount = useRef(0)
+  const geminiGenerateContentCount = useRef(0)
+  const getChatGPTresponseCount = useRef(0)
   const [ pending, setPending ] = useState(false)
   const [ geminiChatHistory, setGeminiChatHistory ] = useState<geminiChatHistory>([])
   const [ chatGPTChatHistory, setChatGPTChatHistory ] = useState<chatGPTChatHistory>([])
-  const chatGPTUsageCounter = useRef(0)
-
-  const sendMessageToGemini = async () => {
-    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("user",userInput)])
-    setUserInput("")
-
-    setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement("model",chatPendingText)])
-    setPending(true)
-    const geminiResponse = await geminiGenerateContent({
-      message: userInput,
-      history: geminiChatHistory
-    })
-    setGeminiChatHistory(geminiChatHistory => {
-      const chat:geminiChatHistory = []
-      geminiChatHistory.map(geminiHistoryElement => {
-        if(geminiHistoryElement.parts[0].text == chatPendingText) {
-          chat.push(createGeminiHistoryElement("model",geminiResponse))
-          return
-        }
-
-        chat.push(geminiHistoryElement)
-      })
-      return chat
-    })
-    setPending(false)
-
-    sendMessageToGeminiCount.current += 1
-  }
-
-  const sendMessageToChatGPT = async () => {
-    if(chatGPTUsageCounter.current > 10) {
-      return
-    }
-
-    setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory, createChatGPTChatHistoryElement("user",userInput)])
-    setUserInput("")
-
-    if(chatGPTUsageCounter.current == 10) {
-      setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant","You have reached the limit.")])
-      chatGPTUsageCounter.current += 1
-      setPending(false)
-      return
-    }
-
-    setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement("assistant","Just a sec...")])
-    setPending(true)
-    const chatGPTResponse = await getChatGPTresponse({
-      message: userInput,
-      history: chatGPTChatHistory
-    })
-    setChatGPTChatHistory(chatGPTChatHistory => {
-      const chat:chatGPTChatHistory = []
-      chatGPTChatHistory.map(chatGPTChatHistoryElement => {
-        if(chatGPTChatHistoryElement.content == "Just a sec...") {
-          chat.push(createChatGPTChatHistoryElement("assistant",chatGPTResponse))
-          return
-        }
-
-        chat.push(chatGPTChatHistoryElement)
-      })
-      return chat
-    })
-    chatGPTUsageCounter.current += 1
-    setPending(false)
-    sendMessageToChatGPTCount.current += 1
-  }
 
   const sendMessage = async () => {
     if(userInput == "") return
@@ -136,6 +70,7 @@ const App = () => {
         message: userInput,
         history: geminiChatHistory,
       })
+      geminiGenerateContentCount.current += 1
       setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory,geminiResponse))
       setPending(false)
 
@@ -145,8 +80,8 @@ const App = () => {
       pushChatGPTChats("user", userInput)
       setUserInput("")
 
-      pushGeminiChats("user", chatPendingText)
-      pushChatGPTChats('user', chatPendingText)
+      pushGeminiChats("model", chatPendingText)
+      pushChatGPTChats("assistant", chatPendingText)
       setPending(true)
       const [ geminiResponse, chatGPTResponse ] = await Promise.all([
 
@@ -161,8 +96,10 @@ const App = () => {
         })
 
       ])
-      replaceGeminiJustASecMessage(geminiChatHistory, geminiResponse)
-      replaceChatGPTJustASecMessage(chatGPTChatHistory, chatGPTResponse)
+      geminiGenerateContentCount.current += 1
+      getChatGPTresponseCount.current += 1
+      setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory, geminiResponse))
+      setChatGPTChatHistory(chatGPTChatHistory => replaceChatGPTJustASecMessage(chatGPTChatHistory, chatGPTResponse))
       setPending(false)
     }
 
