@@ -44,6 +44,49 @@ const App = () => {
       return chat
   }
 
+  const sendMessageToGemini = async () => {
+    pushGeminiChats("user",userInput)
+    setUserInput("")
+
+    pushGeminiChats("model", chatPendingText)
+    setPending(true)
+    const geminiResponse = await geminiGenerateContent({
+      message: userInput,
+      history: geminiChatHistory,
+    })
+    geminiGenerateContentCount.current += 1
+    setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory,geminiResponse))
+    setPending(false)
+  }
+
+  const sendMessageToGeminiAndChatGPT = async () => {
+    pushGeminiChats("user", userInput)
+    pushChatGPTChats("user", userInput)
+    setUserInput("")
+
+    pushGeminiChats("model", chatPendingText)
+    pushChatGPTChats("assistant", chatPendingText)
+    setPending(true)
+    const [ geminiResponse, chatGPTResponse ] = await Promise.all([
+
+      geminiGenerateContent({
+        message: userInput,
+        history: geminiChatHistory
+      }),
+
+      getChatGPTresponse({
+        message: userInput,
+        history: chatGPTChatHistory
+      })
+
+      ])
+      geminiGenerateContentCount.current += 1
+      getChatGPTresponseCount.current += 1
+      setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory, geminiResponse))
+      setChatGPTChatHistory(chatGPTChatHistory => replaceChatGPTJustASecMessage(chatGPTChatHistory, chatGPTResponse))
+      setPending(false)
+  }
+
   //main
   const [userInput, setUserInput] = useState("")
 
@@ -61,46 +104,14 @@ const App = () => {
     if(pending == true) return
 
     if(isSplit==false) {
-      pushGeminiChats("user",userInput)
-      setUserInput("")
-
-      pushGeminiChats("model", chatPendingText)
-      setPending(true)
-      const geminiResponse = await geminiGenerateContent({
-        message: userInput,
-        history: geminiChatHistory,
-      })
-      geminiGenerateContentCount.current += 1
-      setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory,geminiResponse))
-      setPending(false)
-
+      sendMessageToGemini()
     }
     else if(isSplit==true){
-      pushGeminiChats("user", userInput)
-      pushChatGPTChats("user", userInput)
-      setUserInput("")
-
-      pushGeminiChats("model", chatPendingText)
-      pushChatGPTChats("assistant", chatPendingText)
-      setPending(true)
-      const [ geminiResponse, chatGPTResponse ] = await Promise.all([
-
-        geminiGenerateContent({
-          message: userInput,
-          history: geminiChatHistory
-        }),
-
-        getChatGPTresponse({
-          message: userInput,
-          history: chatGPTChatHistory
-        })
-
-      ])
-      geminiGenerateContentCount.current += 1
-      getChatGPTresponseCount.current += 1
-      setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory, geminiResponse))
-      setChatGPTChatHistory(chatGPTChatHistory => replaceChatGPTJustASecMessage(chatGPTChatHistory, chatGPTResponse))
-      setPending(false)
+      if(getChatGPTresponseCount.current >= 5) {
+        sendMessageToGemini()
+      } else {
+        sendMessageToGeminiAndChatGPT()
+      }
     }
 
     sendMessageExecuteCount.current += 1
