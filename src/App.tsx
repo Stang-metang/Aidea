@@ -14,7 +14,8 @@ const App = () => {
     setGeminiChatHistory(geminiChatHistory => [...geminiChatHistory,createGeminiHistoryElement(role,text)])
   }
 
-  const replaceGeminiJustASecMessage = (geminiChatHistory: geminiChatHistory, geminiResponse: string) => {
+  const replaceGeminiJustASecMessage = (geminiResponse: string) => {
+    setGeminiChatHistory(geminiChatHistory => {
       const chat:geminiChatHistory = []
       geminiChatHistory.map(geminiHistoryElement => {
         if(geminiHistoryElement.parts[0].text == "Just a sec...") {
@@ -25,14 +26,16 @@ const App = () => {
         chat.push(geminiHistoryElement)
       })
       return chat
+    })
   }
 
   const pushChatGPTChats = (role: "user" | "assistant", content: string) => {
     setChatGPTChatHistory(chatGPTChatHistory => [...chatGPTChatHistory,createChatGPTChatHistoryElement(role,content)])
   }
 
-  const replaceChatGPTJustASecMessage = (chatGPTChatHistory: chatGPTChatHistory, chatGPTResponse: string) => {
-    const chat:chatGPTChatHistory = []
+  const replaceChatGPTJustASecMessage = (chatGPTResponse: string) => {
+    setChatGPTChatHistory(chatGPTChatHistory => {
+      const chat:chatGPTChatHistory = []
       chatGPTChatHistory.map(chatGPTChatHistoryElement => {
         if(chatGPTChatHistoryElement.content == "Just a sec...") {
           chat.push(createChatGPTChatHistoryElement("assistant",chatGPTResponse))
@@ -42,6 +45,7 @@ const App = () => {
         chat.push(chatGPTChatHistoryElement)
       })
       return chat
+    })
   }
 
   const sendMessageToGemini = async () => {
@@ -55,7 +59,7 @@ const App = () => {
       history: geminiChatHistory,
     })
     geminiGenerateContentCount.current += 1
-    setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory,geminiResponse))
+    replaceGeminiJustASecMessage(geminiResponse)
     setPending(false)
   }
 
@@ -82,8 +86,8 @@ const App = () => {
       ])
       geminiGenerateContentCount.current += 1
       getChatGPTresponseCount.current += 1
-      setGeminiChatHistory(geminiChatHistory => replaceGeminiJustASecMessage(geminiChatHistory, geminiResponse))
-      setChatGPTChatHistory(chatGPTChatHistory => replaceChatGPTJustASecMessage(chatGPTChatHistory, chatGPTResponse))
+      replaceGeminiJustASecMessage(geminiResponse)
+      replaceChatGPTJustASecMessage(chatGPTResponse)
       setPending(false)
   }
 
