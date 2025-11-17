@@ -105,12 +105,11 @@ const App = () => {
 
   const sendMessage = async () => {
     if(userInput == "") return
-    if(pending == true) return
+    if(pending) return
 
-    if(isSplit==false) {
+    if(!isSplit) {
       sendMessageToGemini()
-    }
-    else if(isSplit==true){
+    } else{
       if(getChatGPTresponseCount.current >= 5) {
         sendMessageToGemini()
       } else {
